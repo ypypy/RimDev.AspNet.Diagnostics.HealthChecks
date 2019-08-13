@@ -19,13 +19,13 @@ namespace RimDev.AspNet.Diagnostics.HealthChecks
         private readonly OwinMiddleware _next;
         private readonly HealthCheckOptions _healthCheckOptions;
         private readonly RimDevAspNetHealthCheckService _healthCheckService;
-        private readonly IHealthCheck[] _healthChecks;
+        private readonly HealthCheckConfig[] _healthChecks;
 
         public HealthCheckMiddleware(
             OwinMiddleware next,
             ILogger logger,
             HealthCheckOptions healthCheckOptions,
-            IHealthCheck[] healthChecks)
+            HealthCheckConfig[] healthChecks)
             : base(next)
         {
             if (next == null)

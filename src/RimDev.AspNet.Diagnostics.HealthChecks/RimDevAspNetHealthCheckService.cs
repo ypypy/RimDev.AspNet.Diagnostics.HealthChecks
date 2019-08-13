@@ -27,7 +27,7 @@ namespace RimDev.AspNet.Diagnostics.HealthChecks
 
         public async Task<HealthReport> CheckHealthAsync(
             // Func<HealthCheckRegistration, bool> predicate,
-            IEnumerable<IHealthCheck> healthChecks,
+            IEnumerable<HealthCheckConfig> healthChecks,
             CancellationToken cancellationToken = default(CancellationToken))
         {
             var entries = new Dictionary<string, HealthReportEntry>(StringComparer.OrdinalIgnoreCase);
@@ -35,8 +35,11 @@ namespace RimDev.AspNet.Diagnostics.HealthChecks
             var totalTime = Stopwatch.StartNew();
             Log.HealthCheckProcessingBegin(_logger);
 
-            foreach (var healthCheck in healthChecks)
+            foreach (var healthCheckConfig in healthChecks)
             {
+                var healthCheck = healthCheckConfig.HealthCheck;
+                var healthCheckName = healthCheckConfig.Name ?? healthCheck.GetType().Name;
+
                 /*
                 if (predicate != null && !predicate(registration))
                 {
@@ -48,11 +51,11 @@ namespace RimDev.AspNet.Diagnostics.HealthChecks
 
                 // If the health check does things like make Database queries using EF or backend HTTP calls,
                 // it may be valuable to know that logs it generates are part of a health check. So we start a scope.
-                using (_logger.BeginScope(new HealthCheckLogScope(healthCheck.GetType().Name)))
+                using (_logger.BeginScope(new HealthCheckLogScope(healthCheckName)))
                 {
                     var stopwatch = Stopwatch.StartNew();
 
-                    Log.HealthCheckBegin(_logger, healthCheck);
+                    Log.HealthCheckBegin(_logger, healthCheckName);
 
                     HealthReportEntry entry;
                     try
@@ -60,7 +63,7 @@ namespace RimDev.AspNet.Diagnostics.HealthChecks
                         var context = new HealthCheckContext
                         {
                             Registration = new HealthCheckRegistration(
-                                healthCheck.GetType().Name,
+                                healthCheckName,
                                 healthCheck,
                                 null,
                                 Enumerable.Empty<string>())
@@ -76,8 +79,8 @@ namespace RimDev.AspNet.Diagnostics.HealthChecks
                             exception: result.Exception,
                             data: result.Data);
 
-                        Log.HealthCheckEnd(_logger, healthCheck, entry, duration);
-                        Log.HealthCheckData(_logger, healthCheck, entry);
+                        Log.HealthCheckEnd(_logger, healthCheckName, entry, duration);
+                        Log.HealthCheckData(_logger, healthCheckName, entry);
                     }
 
                     // Allow cancellation to propagate.
@@ -91,10 +94,10 @@ namespace RimDev.AspNet.Diagnostics.HealthChecks
                             exception: ex,
                             data: null);
 
-                        Log.HealthCheckError(_logger, healthCheck, ex, duration);
+                        Log.HealthCheckError(_logger, healthCheckName, ex, duration);
                     }
 
-                    entries[healthCheck.GetType().Name] = entry;
+                    entries[healthCheckName] = entry;
                 }
             }
 
@@ -173,42 +176,42 @@ namespace RimDev.AspNet.Diagnostics.HealthChecks
                 _healthCheckProcessingEnd(logger, duration.TotalMilliseconds, status, null);
             }
 
-            public static void HealthCheckBegin(ILogger logger, IHealthCheck healthCheck)
+            public static void HealthCheckBegin(ILogger logger, string healthCheckName)
             {
-                _healthCheckBegin(logger, healthCheck.GetType().Name, null);
+                _healthCheckBegin(logger, healthCheckName, null);
             }
 
-            public static void HealthCheckEnd(ILogger logger, IHealthCheck healthCheck, HealthReportEntry entry, TimeSpan duration)
+            public static void HealthCheckEnd(ILogger logger, string healthCheckName, HealthReportEntry entry, TimeSpan duration)
             {
                 switch (entry.Status)
                 {
                     case HealthStatus.Healthy:
-                        _healthCheckEndHealthy(logger, healthCheck.GetType().Name, duration.TotalMilliseconds, entry.Status, entry.Description, null);
+                        _healthCheckEndHealthy(logger, healthCheckName, duration.TotalMilliseconds, entry.Status, entry.Description, null);
                         break;
 
                     case HealthStatus.Degraded:
-                        _healthCheckEndDegraded(logger, healthCheck.GetType().Name, duration.TotalMilliseconds, entry.Status, entry.Description, null);
+                        _healthCheckEndDegraded(logger, healthCheckName, duration.TotalMilliseconds, entry.Status, entry.Description, null);
                         break;
 
                     case HealthStatus.Unhealthy:
-                        _healthCheckEndUnhealthy(logger, healthCheck.GetType().Name, duration.TotalMilliseconds, entry.Status, entry.Description, null);
+                        _healthCheckEndUnhealthy(logger, healthCheckName, duration.TotalMilliseconds, entry.Status, entry.Description, null);
                         break;
                 }
             }
 
-            public static void HealthCheckError(ILogger logger, IHealthCheck healthCheck, Exception exception, TimeSpan duration)
+            public static void HealthCheckError(ILogger logger, string healthCheckName, Exception exception, TimeSpan duration)
             {
-                _healthCheckError(logger, healthCheck.GetType().Name, duration.TotalMilliseconds, exception);
+                _healthCheckError(logger, healthCheckName, duration.TotalMilliseconds, exception);
             }
 
-            public static void HealthCheckData(ILogger logger, IHealthCheck healthCheck, HealthReportEntry entry)
+            public static void HealthCheckData(ILogger logger, string healthCheckName, HealthReportEntry entry)
             {
                 if (entry.Data.Count > 0 && logger.IsEnabled(LogLevel.Debug))
                 {
                     logger.Log(
                         LogLevel.Debug,
                         EventIds.HealthCheckData,
-                        new HealthCheckDataLogValue(healthCheck.GetType().Name, entry.Data),
+                        new HealthCheckDataLogValue(healthCheckName, entry.Data),
                         null,
                         (state, ex) => state.ToString());
                 }

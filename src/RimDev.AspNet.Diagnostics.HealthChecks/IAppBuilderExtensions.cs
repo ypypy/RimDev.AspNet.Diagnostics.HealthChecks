@@ -11,7 +11,7 @@ namespace RimDev.AspNet.Diagnostics.HealthChecks
             this IAppBuilder app,
             string url,
             HealthCheckOptions options,
-            params IHealthCheck[] healthChecks)
+            params HealthCheckConfig[] healthChecks)
         {
             var loggerFactory = new Microsoft.Extensions.Logging.LoggerFactory();
             var logger = loggerFactory.CreateLogger(nameof(HealthCheckMiddleware));
@@ -28,7 +28,7 @@ namespace RimDev.AspNet.Diagnostics.HealthChecks
         public static void UseHealthChecks(
             this IAppBuilder app,
             string url,
-            params IHealthCheck[] healthChecks)
+            params HealthCheckConfig[] healthChecks)
         {
             UseHealthChecks(app, url, new HealthCheckOptions(), healthChecks);
         }
@@ -37,7 +37,7 @@ namespace RimDev.AspNet.Diagnostics.HealthChecks
             this IAppBuilder app,
             string url,
             HealthCheckOptions options,
-            IEnumerable<IHealthCheck> healthChecks)
+            IEnumerable<HealthCheckConfig> healthChecks)
         {
             UseHealthChecks(app, url, options, healthChecks.ToArray());
         }
@@ -45,7 +45,7 @@ namespace RimDev.AspNet.Diagnostics.HealthChecks
         public static void UseHealthChecks(
             this IAppBuilder app,
             string url,
-            IEnumerable<IHealthCheck> healthChecks)
+            IEnumerable<HealthCheckConfig> healthChecks)
         {
             UseHealthChecks(app, url, new HealthCheckOptions(), healthChecks.ToArray());
         }

@@ -14,12 +14,12 @@ namespace MvcSample
         {
             app.UseHealthChecks(
                 "/_health",
-                new NoopHealthCheck(),
-                //new SlowNoopHealthCheck(),
-                //new SqlServerHealthCheck(
+                new HealthCheckConfig("noop", new NoopHealthCheck()),
+                //new HealthCheckConfig("slowNoop", new SlowNoopHealthCheck()),
+                //new HealthCheckConfig("sqlServer", new SqlServerHealthCheck(
                 //    @"Data Source=(LocalDB)\v13.0;Integrated Security=True;Initial Catalog=master",
-                //    "select 'a'"),
-                new PingHealthCheck(new PingHealthCheckOptions().AddHost("localhost", 1000)));
+                //    "select 'a'")),
+                new HealthCheckConfig("ping", new PingHealthCheck(new PingHealthCheckOptions().AddHost("localhost", 1000))));
         }
     }
 

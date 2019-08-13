@@ -100,6 +100,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="HealthCheckConfig.cs" />
     <Compile Include="HealthCheckLogScope.cs" />
     <Compile Include="HealthCheckMiddleware.cs" />
     <Compile Include="HealthCheckOptions.cs" />
