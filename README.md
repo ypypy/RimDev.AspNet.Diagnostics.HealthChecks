@@ -19,8 +19,8 @@ public class Startup
     {
         app.UseHealthChecks(
             "/_health",
-            new NoopHealthCheck(),
-            new PingHealthCheck(new PingHealthCheckOptions().AddHost("localhost", 1000)));
+            new HealthCheckConfig("noop", new NoopHealthCheck()),
+            new HealthCheckConfig("ping", new PingHealthCheck(new PingHealthCheckOptions().AddHost("localhost", 1000))));
     }
 }
 ```
